@@ -1,21 +1,34 @@
 import React, {Component} from 'react';
 import {StyleSheet, Text, View, TouchableOpacity} from 'react-native';
 import {Actions} from 'react-native-router-flux';
+import {downloadBeaconList, downloadMap} from "../floorMap/actions/mapAction";
+import {connect} from "react-redux";
 
 
 class Home extends Component {
+
+    componentDidMount(): void {
+
+        console.log("Descargando lista de beacons");
+        this.props.downloadBeaconList();
+        if (this.props.mapRedux.plan.length === 0) {
+            console.log("Descargando mapa");
+            this.props.downloadMap();
+        }
+    }
+
     render() {
         return (
-                <View style={styles.container}>
+            <View style={styles.container}>
 
-                    <TouchableOpacity onPress={Actions.FloorPlan}>
-                        <View style={styles.circle}>
-                            <Text style={styles.text}>
-                                TAP TO PLAY
-                            </Text>
-                        </View>
-                    </TouchableOpacity>
-                </View>
+                <TouchableOpacity onPress={Actions.FloorPlan}>
+                    <View style={styles.circle}>
+                        <Text style={styles.text}>
+                            TAP TO PLAY
+                        </Text>
+                    </View>
+                </TouchableOpacity>
+            </View>
         );
     }
 }
@@ -43,4 +56,14 @@ const styles = StyleSheet.create({
     }
 });
 
-export default Home
+const mapStateToProps = state => {
+    return {
+        mapRedux: state.MapReducer,
+
+    }
+};
+
+const mapStateToPropsAction = {downloadMap, downloadBeaconList};
+
+
+export default connect(mapStateToProps, mapStateToPropsAction)(Home);

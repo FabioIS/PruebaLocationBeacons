@@ -1,9 +1,10 @@
 import React, {Component} from 'react'
 import {connect} from "react-redux";
 import {StyleSheet, View, Text, TouchableOpacity, Image} from 'react-native';
-import {downloadMap, downloadBeaconList} from "./actions/mapAction";
+import {downloadMap, downloadBeaconList, updatePosition} from "./actions/mapAction";
 import {Location} from "../location/location";
-import {resetScan} from "../auxModule/auxModule";
+import {resetScan, startScan} from "../auxModule/auxModule";
+import AuxModule from "../auxModule/auxModule";
 
 //Leyenda : En el mapa habrá distintos valores según el terreno ...
 // valor 1 = Camino transitable. (Azul)
@@ -16,31 +17,23 @@ class FloorPlan extends Component {
 
     constructor(props) {
         super(props);
-        this.state = {
-            beaconsToTriangulate: []
-        }
 
-    }
-
-    componentWillMount() {
-        this.props.downloadMap();
-        this.props.downloadBeaconList()
-        console.log("calculo de location : ", Location({
-            beacon1: {x: 100, y: 100, d: 50},
-            beacon2: {x: 160, y: 120, d: 36.06},
-            beacon3: {x: 70, y: 150, d: 63.83}
-        }));
     }
 
     componentDidMount(): void {
         this.interval = setInterval(() => {
-            this.setState({
-                beaconsToTriangulate: this.props.beaconArray.beaconsOnRange
-            });
-        }, 1500);
+                this.props.updatePosition(this._calculatePosition());
+            this.setState();
+            console.log("Estado actualizado")
+        }, 1000);
         this.reset = setInterval(() => {
             resetScan()
         }, 10000);
+        console.log("LOCATION",Location({
+            beacon1:{x:3, y:4, d: 1.12899983851278393},
+            beacon2:{x: 1, y: 3, d: 1.1615055828898458},
+            beacon3:{x: 4, y: 6, d: 1.12899983851278393}
+        }))
     }
 
     componentWillUnmount(): void {
@@ -54,13 +47,16 @@ class FloorPlan extends Component {
         }
         return (
             <View style={{flex: 1, flexDirection: 'row'}}>
-                {row.map((x) => {
+                {row.map((x, index) => {
                     if (x === 1) {
                         //Camino transitable
-                        return (<View style={{flex: 1, backgroundColor: 'blue'}}/>);
-                    } else {
+                        return (<View key={index} style={{flex: 1, backgroundColor: 'blue'}}/>);
+                    } else if (x === 0) {
                         // Camino no transitable
-                        return (<View style={{flex: 1, backgroundColor: 'red'}}/>);
+                        return (<View key={index} style={{flex: 1, backgroundColor: 'red'}}/>);
+                        // Posición actual
+                    } else {
+                        return (<View key={index} style={{flex: 1, backgroundColor: 'yellow'}}/>);
                     }
                 })}
             </View>
@@ -75,34 +71,59 @@ class FloorPlan extends Component {
     };
 
     _calculatePosition = () => {
-        let beacons = this._orderBeaconsOnRange();
-        let finder = [];
-        for (let i = 0; i > 3; i++) {
-            let index = this.props.mapRedux.beaconsList.indexOf(beacons[i].name);
-            let aux = this.props.mapRedux.beaconsList[index];
-            aux.push(beacons[i].distance);
-            finder[i] = aux;
+        if (this.props.scanner.beaconsOnRange.length >= 3) {
+            let beacons = this._orderBeaconsOnRange();
+            let finder = [];
+            for (let i = 0; i < 3; i++) {
+                let beaconPosition = this.props.mapRedux.beaconsList[beacons[i].name];
+                beaconPosition.d = beacons[i].accuracy;
+                console.log("Beacon pusheado: ", beaconPosition);
+                finder[i] = beaconPosition;
+            }
+            return Location({
+                beacon1: {x: finder[0].x, y: finder[0].y, d: finder[0].d},
+                beacon2: {x: finder[1].x, y: finder[1].y, d: finder[1].d},
+                beacon3: {x: finder[2].x, y: finder[2].y, d: finder[2].d}
+            })
+        }else{
+            return null
         }
-        return Location({
-            beacon1: {x: finder[0][1], y: finder[0][2], d: finder[0][3]},
-            beacon2: {x: finder[1][1], y: finder[1][2], d: finder[1][3]},
-            beacon3: {x: finder[2][1], y: finder[2][2], d: finder[2][3]}
-        })
 
     };
 
     render() {
         return (
             <View style={{flex: 1, flexDirection: 'column'}}>
+                <AuxModule/>
                 {this.props.mapRedux.plan.map((row, index) => {
                     return this.renderRow(row, index)
                 })}
+                <TouchableOpacity style={styles.button} onPress={() => startScan()}>
+                    <Text style={styles.buttonText}>Start Scanner</Text>
+                </TouchableOpacity>
             </View>
         )
     }
 
 
 }
+
+const styles = StyleSheet.create({
+    button: {
+        textAlign: 'center',
+        justifyContent: 'center',
+        padding: 15,
+        backgroundColor: 'transparent',
+        borderWidth: 3,
+        borderColor: 'black',
+        borderRadius: 10,
+        width: '90%',
+        height: '40%'
+    },
+    buttonText: {
+        color: '#323232',
+    },
+});
 
 const mapStateToProps = state => {
     return {
@@ -112,7 +133,7 @@ const mapStateToProps = state => {
     }
 };
 
-const mapStateToPropsAction = {downloadMap, downloadBeaconList};
+const mapStateToPropsAction = {downloadMap, downloadBeaconList, updatePosition};
 
 
 export default connect(mapStateToProps, mapStateToPropsAction)(FloorPlan);

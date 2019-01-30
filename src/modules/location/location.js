@@ -51,7 +51,7 @@ export const Location = (Props) => {
 
         let X = ((y1[0] - y2[0]) / (y2[1] - y1[1]));
 
-
+        console.log("Posición calculada: ", [X, (y1[0] + (y1[1] * X))]);
         return [X, (y1[0] + (y1[1] * X))];
 
 

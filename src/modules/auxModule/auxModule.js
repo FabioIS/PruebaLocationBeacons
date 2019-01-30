@@ -140,7 +140,6 @@ class AuxModule extends Component {
                         eddystones: x
                     });
                     this.props.addRange(this.state.eddystones);
-                    console.log("Eddystone prueba add 1", this.props.beaconArray.beaconsOnRange);
                 }
             }
         );

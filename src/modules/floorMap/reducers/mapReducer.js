@@ -1,7 +1,8 @@
 const INITIAL_STATE = {
-    prevState: NaN,
+    // Posicion 0 = valor del mapa, posición 1 = eje x, posicion 2 = eje Y
+    prevPosition: [],
     plan: [],
-    beaconsList: [],
+    beaconsList: {},
 };
 export default (state = INITIAL_STATE, action) => {
     switch (action.type) {
@@ -18,8 +19,8 @@ export default (state = INITIAL_STATE, action) => {
         case 'UPDATE_MAP':
             return{
                 ...state,
-                plan: action.payload,
-                prevState: action.prevPosition
+                plan: action.payload.newMap,
+                prevPosition: action.payload.prevPosition
             };
         default:
             return state

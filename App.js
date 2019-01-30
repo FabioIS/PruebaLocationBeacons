@@ -7,7 +7,9 @@ const {persistor, store} = configureStore();
 import IndexNavigation from "./src/modules/navigation"
 
 export default class App extends Component {
-  render() {
+
+
+    render() {
     return (
         <Provider store={store}>
           <PersistGate persistor={persistor} onBeforeLift={this._onBeforeLift}>
@@ -21,3 +23,5 @@ export default class App extends Component {
     );
   }
 }
+
+
