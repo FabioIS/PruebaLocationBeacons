@@ -11,15 +11,14 @@ class Home extends Component {
 
         console.log("Descargando lista de beacons");
         this.props.downloadBeaconList();
-        if (this.props.mapRedux.plan.length === 0) {
-            console.log("Descargando mapa");
-            this.props.downloadMap();
-        }
+        this.props.downloadMap();
+
     }
 
     render() {
         return (
             <View style={styles.container}>
+                {this.props.mapRedux.plan.length > 0 ? <Text> Todo ok </Text>: null}
 
                 <TouchableOpacity onPress={Actions.FloorPlan}>
                     <View style={styles.circle}>

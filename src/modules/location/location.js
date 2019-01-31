@@ -41,18 +41,20 @@ export const Location = (Props) => {
     }
 
     function triangulation(beacon1, beacon2, beacon3) {
-        let minEc1 = _firstEcuationExtended(beacon1.x, beacon1.y, beacon1.d);
-        let minEc2 = _firstEcuationExtended(beacon2.x, beacon2.y, beacon2.d);
-        let minEc3 = _firstEcuationExtended(beacon3.x, beacon3.y, beacon3.d);
+
+        let minEc1 = _firstEcuationExtended(beacon1.x, beacon1.y, beacon1.distance);
+        let minEc2 = _firstEcuationExtended(beacon2.x, beacon2.y, beacon2.distance);
+        let minEc3 = _firstEcuationExtended(beacon3.x, beacon3.y, beacon3.distance);
         let subsEc1 = _substracMinEc(minEc1, minEc2);
         let subsEc2 = _substracMinEc(minEc2, minEc3);
         let y1 = _getYFromEcuation(subsEc1);
         let y2 = _getYFromEcuation(subsEc2);
 
-        let X = ((y1[0] - y2[0]) / (y2[1] - y1[1]));
+        let X = Math.trunc((y1[0] - y2[0]) / (y2[1] - y1[1]));
+        let Y = Math.trunc(y1[0] + (y1[1] * X));
 
-        console.log("Posición calculada: ", [X, (y1[0] + (y1[1] * X))]);
-        return [X, (y1[0] + (y1[1] * X))];
+        console.log("Posición calculada: ", [X, Y]);
+        return [X, Y];
 
 
     }

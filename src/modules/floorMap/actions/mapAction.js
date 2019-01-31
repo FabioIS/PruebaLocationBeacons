@@ -59,9 +59,9 @@ export const downloadMap = () => async (dispatch) => {
 // Descarga las posiciones absolutas de las balizas en el mapa. Cualquier modificación en nombre o posición HACERLA AQUI
 export const downloadBeaconList = () => async (dispatch) => {
     let beaconsList = {
-        "BlueUp-04-025410":{x: 2,y: 3, d: NaN},
-        "BlueUp-04-025411":{x: 3,y: 3, d: NaN},
-        "BlueUp-04-025412":{x: 4,y: 3, d: NaN}
+        "BlueUp-04-025410":{x: 9,y: 7, distance: NaN},
+        "BlueUp-04-025411":{x: 4,y: 10, distance: NaN},
+        "BlueUp-04-025412":{x: 8,y: 17, distance: NaN}
     };
     console.log("BeaconsList: ",beaconsList);
 
@@ -73,17 +73,21 @@ export const downloadBeaconList = () => async (dispatch) => {
 
 //Devolvemos el valor anterior al mapa y actualizamos la nueva posición.
 export const updatePosition = (position) => async (dispatch, getState) => {
-    let newMap = getState().MapReducer.plan;
-    console.log("Esta es la posición", position);
-    let prevPosition = getState().MapReducer.prevPosition;
-    if (position !== null) {
-        newMap[prevPosition[1]][prevPosition[2]] = prevPosition[0];
+    if (position !== undefined && position[0] >= 0 && position[1] >= 0) {
+        let newMap = getState().MapReducer.plan;
+        let prevPosition = getState().MapReducer.prevPosition;
+        if(prevPosition.length > 0) {
+            newMap[prevPosition[1]][prevPosition[2]] = prevPosition[0];
+        }
         // Posicion 0 = valor del mapa, posición 1 = eje x, posicion 2 = eje Y
         prevPosition = [newMap[position[0]][position[1]], position[0], position[1]];
+        console.log("Vamos a ver: ", prevPosition);
         newMap[position[0]][position[1]] = 5;
+        console.log("NewMap : ", newMap);
+        console.log("PrevPosition : ",prevPosition);
+        dispatch({
+            type: 'UPDATE_MAP',
+            payload: {newMap: newMap, prevPosition: prevPosition}
+        })
     }
-    dispatch({
-        type: 'UPDATE_MAP',
-        payload: {newMap: newMap, prevPosition: prevPosition}
-    })
 };

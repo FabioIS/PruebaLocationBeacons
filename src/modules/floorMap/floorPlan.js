@@ -1,8 +1,9 @@
 import React, {Component} from 'react'
 import {connect} from "react-redux";
-import {StyleSheet, View, Text, TouchableOpacity, Image} from 'react-native';
+import {StyleSheet, View, Text, TouchableOpacity} from 'react-native';
 import {downloadMap, downloadBeaconList, updatePosition} from "./actions/mapAction";
-import {Location} from "../location/location";
+import {PriorityLocation} from "../priorityLocation/priorityLocation";
+import {PriorityAreaCalculator} from "../priorityLocation/elements/priorityAreaCalculator";
 import {resetScan, startScan} from "../auxModule/auxModule";
 import AuxModule from "../auxModule/auxModule";
 
@@ -21,19 +22,15 @@ class FloorPlan extends Component {
     }
 
     componentDidMount(): void {
-        this.interval = setInterval(() => {
-                this.props.updatePosition(this._calculatePosition());
+        this.interval = setInterval(async () => {
+            await this.props.updatePosition(this._calculatePosition());
             this.setState();
-            console.log("Estado actualizado")
-        }, 1000);
+        }, 3000);
         this.reset = setInterval(() => {
-            resetScan()
-        }, 10000);
-        console.log("LOCATION",Location({
-            beacon1:{x:3, y:4, d: 1.12899983851278393},
-            beacon2:{x: 1, y: 3, d: 1.1615055828898458},
-            beacon3:{x: 4, y: 6, d: 1.12899983851278393}
-        }))
+            //resetScan();
+            this.setState({});
+        }, 5000);
+
     }
 
     componentWillUnmount(): void {
@@ -63,77 +60,94 @@ class FloorPlan extends Component {
         )
     };
 
-    _orderBeaconsOnRange = () => {
-        return this.props.scanner.beaconsOnRange.sort(function (a, b) {
-            return a.distance - b.distance;
+    _getBeaconsOnPriority = () => {
+        let result = [];
+        this.props.scanner.beaconsOnRange.forEach((beacon) => {
+            beacon.accuracy < 10 ? result.push(beacon) : null;
         });
+        return result;
+        // return this.props.scanner.beaconsOnRange.sort(function (a, b) {
+        //     return a.distance - b.distance;
+        //  });
 
     };
 
     _calculatePosition = () => {
-        if (this.props.scanner.beaconsOnRange.length >= 3) {
-            let beacons = this._orderBeaconsOnRange();
-            let finder = [];
-            for (let i = 0; i < 3; i++) {
-                let beaconPosition = this.props.mapRedux.beaconsList[beacons[i].name];
-                beaconPosition.d = beacons[i].accuracy;
-                console.log("Beacon pusheado: ", beaconPosition);
-                finder[i] = beaconPosition;
-            }
-            return Location({
-                beacon1: {x: finder[0].x, y: finder[0].y, d: finder[0].d},
-                beacon2: {x: finder[1].x, y: finder[1].y, d: finder[1].d},
-                beacon3: {x: finder[2].x, y: finder[2].y, d: finder[2].d}
-            })
-        }else{
-            return null
+
+        let beacons = this._getBeaconsOnPriority();
+        let finder = [];
+        for (let i = 0; i < beacons.length; i++) {
+            let beaconPosition = this.props.mapRedux.beaconsList[beacons[i].name];
+            console.log("Beacon pusheado: ", beaconPosition);
+            finder[i] = {x: beaconPosition.x, y: beaconPosition.y, distance: beacons[i].accuracy};
         }
+        let  areas = PriorityAreaCalculator({
+            beaconsOnPriority: finder,
+            plan: this.props.mapRedux.plan
+        });
+        return PriorityLocation({
+            areas: areas
+        })
 
-    };
 
-    render() {
-        return (
-            <View style={{flex: 1, flexDirection: 'column'}}>
+    }
+}
+
+render()
+{
+    return (
+        <View style={{flex: 12, flexDirection: 'column'}}>
+            <View style={{flex: 2}}>
                 <AuxModule/>
                 {this.props.mapRedux.plan.map((row, index) => {
                     return this.renderRow(row, index)
                 })}
-                <TouchableOpacity style={styles.button} onPress={() => startScan()}>
-                    <Text style={styles.buttonText}>Start Scanner</Text>
-                </TouchableOpacity>
             </View>
-        )
-    }
+            <TouchableOpacity style={styles.button} onPress={() => startScan()}>
+                <Text style={styles.buttonText}>Start Scanner</Text>
+            </TouchableOpacity>
+        </View>
+    )
+}
 
 
 }
 
-const styles = StyleSheet.create({
-    button: {
-        textAlign: 'center',
-        justifyContent: 'center',
-        padding: 15,
-        backgroundColor: 'transparent',
-        borderWidth: 3,
-        borderColor: 'black',
-        borderRadius: 10,
-        width: '90%',
-        height: '40%'
-    },
-    buttonText: {
-        color: '#323232',
-    },
-});
+const
+    styles = StyleSheet.create({
+        button: {
+            flex: 1,
+            textAlign: 'center',
+            justifyContent: 'center',
+            padding: 15,
+            backgroundColor: 'transparent',
+            borderWidth: 3,
+            borderColor: 'black',
+            borderRadius: 10,
+            width: '90%',
+            height: '40%'
+        },
+        buttonText: {
+            color: '#323232',
+        },
+    });
 
-const mapStateToProps = state => {
-    return {
-        mapRedux: state.MapReducer,
-        scanner: state.RangeReducer
+const
+    mapStateToProps = state => {
+        return {
+            mapRedux: state.MapReducer,
+            scanner: state.RangeReducer
 
-    }
-};
+        }
+    };
 
-const mapStateToPropsAction = {downloadMap, downloadBeaconList, updatePosition};
+const
+    mapStateToPropsAction = {downloadMap, downloadBeaconList, updatePosition};
 
 
-export default connect(mapStateToProps, mapStateToPropsAction)(FloorPlan);
+export default connect(mapStateToProps, mapStateToPropsAction)
+
+(
+    FloorPlan
+)
+;
