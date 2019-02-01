@@ -73,18 +73,24 @@ export const downloadBeaconList = () => async (dispatch) => {
 
 //Devolvemos el valor anterior al mapa y actualizamos la nueva posición.
 export const updatePosition = (position) => async (dispatch, getState) => {
-    if (position !== undefined && position[0] >= 0 && position[1] >= 0) {
+    if (position !== undefined) {
         let newMap = getState().MapReducer.plan;
         let prevPosition = getState().MapReducer.prevPosition;
         if(prevPosition.length > 0) {
-            newMap[prevPosition[1]][prevPosition[2]] = prevPosition[0];
+            prevPosition.forEach((oldPosition) => {
+                newMap[oldPosition[1]][oldPosition[2]] = oldPosition[0];
+            });
         }
+        prevPosition = [];
         // Posicion 0 = valor del mapa, posición 1 = eje x, posicion 2 = eje Y
-        prevPosition = [newMap[position[0]][position[1]], position[0], position[1]];
-        console.log("Vamos a ver: ", prevPosition);
-        newMap[position[0]][position[1]] = 5;
-        console.log("NewMap : ", newMap);
-        console.log("PrevPosition : ",prevPosition);
+        for(let i = 0; i < position.length; i++){
+            prevPosition[i] = [newMap[position[i][0]][position[i][1]], position[i][0], position[i][1]];
+            newMap[position[i][0]][position[i][1]] = 5;
+        }
+        console.log("PrevPosition: ", prevPosition);
+        // console.log("Vamos a ver: ", prevPosition);
+        // console.log("NewMap : ", newMap);
+        // console.log("PrevPosition : ",prevPosition);
         dispatch({
             type: 'UPDATE_MAP',
             payload: {newMap: newMap, prevPosition: prevPosition}

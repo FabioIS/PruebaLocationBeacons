@@ -74,14 +74,17 @@ class FloorPlan extends Component {
 
     _calculatePosition = () => {
 
-        let beacons = this._getBeaconsOnPriority();
+       // let beacons = this._getBeaconsOnPriority();
         let finder = [];
-        for (let i = 0; i < beacons.length; i++) {
-            let beaconPosition = this.props.mapRedux.beaconsList[beacons[i].name];
-            console.log("Beacon pusheado: ", beaconPosition);
-            finder[i] = {x: beaconPosition.x, y: beaconPosition.y, distance: beacons[i].accuracy};
-        }
-        let  areas = PriorityAreaCalculator({
+        // for (let i = 0; i < beacons.length; i++) {
+        //     let beaconPosition = this.props.mapRedux.beaconsList[beacons[i].name];
+        //     console.log("Beacon pusheado: ", beaconPosition);
+        //     finder[i] = {x: beaconPosition.x, y: beaconPosition.y, distance: beacons[i].accuracy};
+        // }
+        finder.push({x: 9, y: 8, distance: 3});
+       // finder.push({x: 4, y: 10, distance: 6});
+        finder.push({x: 8, y: 17, distance: 9});
+        let areas = PriorityAreaCalculator({
             beaconsOnPriority: finder,
             plan: this.props.mapRedux.plan
         });
@@ -90,11 +93,9 @@ class FloorPlan extends Component {
         })
 
 
-    }
-}
+    };
 
-render()
-{
+render(){
     return (
         <View style={{flex: 12, flexDirection: 'column'}}>
             <View style={{flex: 2}}>
@@ -107,30 +108,28 @@ render()
                 <Text style={styles.buttonText}>Start Scanner</Text>
             </TouchableOpacity>
         </View>
-    )
+    )}
 }
 
 
-}
 
-const
-    styles = StyleSheet.create({
-        button: {
-            flex: 1,
-            textAlign: 'center',
-            justifyContent: 'center',
-            padding: 15,
-            backgroundColor: 'transparent',
-            borderWidth: 3,
-            borderColor: 'black',
-            borderRadius: 10,
-            width: '90%',
-            height: '40%'
-        },
-        buttonText: {
-            color: '#323232',
-        },
-    });
+const styles = StyleSheet.create({
+    button: {
+        flex: 1,
+        textAlign: 'center',
+        justifyContent: 'center',
+        padding: 15,
+        backgroundColor: 'transparent',
+        borderWidth: 3,
+        borderColor: 'black',
+        borderRadius: 10,
+        width: '90%',
+        height: '40%'
+    },
+    buttonText: {
+        color: '#323232',
+    },
+});
 
 const
     mapStateToProps = state => {
