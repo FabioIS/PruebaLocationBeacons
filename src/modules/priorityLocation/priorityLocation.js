@@ -36,10 +36,18 @@ export const PriorityLocation = (Props) => {
 
     function calculateAreaWithPriority2() {
         let result = [];
-        for (let i = 1; i < areas.priority2.length; i++) {
-            for (let j = 0; j < areas.priority2[i].length; j++) {
-                areas.priority2[i-1].includes(areas.priority2[i+j][j]) ? result.push(areas.priority2[i+j][j]) : null;
+
+        if(areas.priority2.length === 1){
+            return areas.priority2[0]
+        }
+        let adder = 1;
+        for (let i = 0; i < areas.priority2.length - 1; i++) {
+            for (let j = 0; j < areas.priority2[i + adder].length; j++) {
+                areas.priority2[i].some((element) => {
+                    return element[0] === areas.priority2[i+adder][j][0] && element[1] === areas.priority2[i+adder][j][1]
+                }) ? result.push(areas.priority2[i+adder][j]): null;
             }
+            adder++;
         }
         return result;
     }

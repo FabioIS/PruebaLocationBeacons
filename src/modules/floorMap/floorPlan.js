@@ -4,7 +4,7 @@ import {StyleSheet, View, Text, TouchableOpacity} from 'react-native';
 import {downloadMap, downloadBeaconList, updatePosition} from "./actions/mapAction";
 import {PriorityLocation} from "../priorityLocation/priorityLocation";
 import {PriorityAreaCalculator} from "../priorityLocation/elements/priorityAreaCalculator";
-import {resetScan, startScan} from "../auxModule/auxModule";
+import {resetScan, startScan, currentlyScanning} from "../auxModule/auxModule";
 import AuxModule from "../auxModule/auxModule";
 
 //Leyenda : En el mapa habrá distintos valores según el terreno ...
@@ -18,18 +18,23 @@ class FloorPlan extends Component {
 
     constructor(props) {
         super(props);
+        this.state = {
+            beaconsToShow: []
+        }
 
     }
 
     componentDidMount(): void {
         this.interval = setInterval(async () => {
-            await this.props.updatePosition(this._calculatePosition());
-            this.setState();
-        }, 3000);
+            if (this.props.scanner.beaconsOnRange.length > 0) {
+                await this.props.updatePosition(this._calculatePosition());
+                this.setState();
+            }
+        }, 2000);
         this.reset = setInterval(() => {
-            //resetScan();
-            this.setState({});
-        }, 5000);
+                resetScan();
+                this.setState({});
+        }, 7000);
 
     }
 
@@ -63,31 +68,35 @@ class FloorPlan extends Component {
     _getBeaconsOnPriority = () => {
         let result = [];
         this.props.scanner.beaconsOnRange.forEach((beacon) => {
-            beacon.accuracy < 10 ? result.push(beacon) : null;
+            console.log()
+            10 ** ((-50 - beacon.rssi) / 35) <= 10 ? result.push(beacon) : null;
         });
         return result;
-        // return this.props.scanner.beaconsOnRange.sort(function (a, b) {
-        //     return a.distance - b.distance;
-        //  });
-
     };
 
     _calculatePosition = () => {
 
-       // let beacons = this._getBeaconsOnPriority();
+        let beacons = this._getBeaconsOnPriority();
+        console.log("Beaacons to show: ", beacons);
+        this.setState({
+            beaconsToShow: beacons
+        });
         let finder = [];
-        // for (let i = 0; i < beacons.length; i++) {
-        //     let beaconPosition = this.props.mapRedux.beaconsList[beacons[i].name];
-        //     console.log("Beacon pusheado: ", beaconPosition);
-        //     finder[i] = {x: beaconPosition.x, y: beaconPosition.y, distance: beacons[i].accuracy};
-        // }
-        finder.push({x: 9, y: 8, distance: 3});
-       // finder.push({x: 4, y: 10, distance: 6});
-        finder.push({x: 8, y: 17, distance: 9});
+        for (let i = 0; i < beacons.length; i++) {
+            // distance : Formula para calcular distancia entre beacon y movil a partir de el rssi esperado a un metro ( -50) y una
+            //constante en 20 y 40 ( 35 ). Los valores dados salen después de calcular varias posibilidades.
+            let distance = Math.round(10 ** ((-50 - beacons[i].rssi) / 35));
+            //Si la distancia es 0.algo la redondeamos a 1 para que los calculos funcionen. A efectos prácticos es lo mismo
+            distance === 0 ? distance = 1 : null;
+            let beaconPosition = this.props.mapRedux.beaconsList[beacons[i].name];
+            finder[i] = {x: beaconPosition.x, y: beaconPosition.y, distance: distance};
+        }
+        console.log("Finder: ", finder);
         let areas = PriorityAreaCalculator({
             beaconsOnPriority: finder,
             plan: this.props.mapRedux.plan
         });
+        console.log("These are the areas: ", areas);
         return PriorityLocation({
             areas: areas
         })
@@ -95,22 +104,37 @@ class FloorPlan extends Component {
 
     };
 
-render(){
-    return (
-        <View style={{flex: 12, flexDirection: 'column'}}>
-            <View style={{flex: 2}}>
-                <AuxModule/>
-                {this.props.mapRedux.plan.map((row, index) => {
-                    return this.renderRow(row, index)
-                })}
-            </View>
-            <TouchableOpacity style={styles.button} onPress={() => startScan()}>
-                <Text style={styles.buttonText}>Start Scanner</Text>
-            </TouchableOpacity>
-        </View>
-    )}
-}
+    _showBeaconsForCalculation = () => {
+        if (this.state.beaconsToShow.length > 0) {
+            return this.state.beaconsToShow.map((beacon) => {
+                return <Text>{beacon.name} --- {10 ** ((-50 - beacon.rssi) / 35)}</Text>
+            })
+        } else {
+            return null;
+        }
+    };
 
+    render() {
+        return (
+            <View style={{flex: 12, flexDirection: 'column'}}>
+                <View style={{flex: 8}}>
+                    <AuxModule/>
+                    {this.props.mapRedux.plan.map((row, index) => {
+                        return this.renderRow(row, index)
+                    })}
+                </View>
+                <View style={{flex: 4}}>
+                    <TouchableOpacity style={styles.button} onPress={() => startScan()}>
+                        <Text style={styles.buttonText}>Start Scanner</Text>
+                    </TouchableOpacity>
+                    <View style={{flexDirection: 'column', flex : 1}}>
+                        {this._showBeaconsForCalculation()}
+                    </View>
+                </View>
+            </View>
+        )
+    }
+}
 
 
 const styles = StyleSheet.create({
@@ -140,13 +164,7 @@ const
         }
     };
 
-const
-    mapStateToPropsAction = {downloadMap, downloadBeaconList, updatePosition};
+const mapStateToPropsAction = {downloadMap, downloadBeaconList, updatePosition};
 
 
-export default connect(mapStateToProps, mapStateToPropsAction)
-
-(
-    FloorPlan
-)
-;
+export default connect(mapStateToProps, mapStateToPropsAction)(FloorPlan);

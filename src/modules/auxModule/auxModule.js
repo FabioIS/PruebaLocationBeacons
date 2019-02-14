@@ -63,6 +63,12 @@ export const startScan = () => {
         .catch(error => console.log('[startScanning]', error));
 };
 
+export const currentlyScanning = () => {
+    return isScanning()
+        .then(() => console.log('started scanning'))
+        .catch(error => console.log('[startScanning]', error));
+};
+
 export function stopScan() {
     reboot = true;
     stopScanning()

@@ -59,7 +59,7 @@ export const downloadMap = () => async (dispatch) => {
 // Descarga las posiciones absolutas de las balizas en el mapa. Cualquier modificación en nombre o posición HACERLA AQUI
 export const downloadBeaconList = () => async (dispatch) => {
     let beaconsList = {
-        "BlueUp-04-025410":{x: 9,y: 7, distance: NaN},
+        "BlueUp-04-025410":{x: 9,y: 3, distance: NaN},
         "BlueUp-04-025411":{x: 4,y: 10, distance: NaN},
         "BlueUp-04-025412":{x: 8,y: 17, distance: NaN}
     };

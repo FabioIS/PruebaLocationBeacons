@@ -9,16 +9,15 @@ export const PriorityAreaCalculator = (Props) => {
     } = Props;
 
     function calculateArea(beacon) {
-        console.log("Plan: ", plan);
         let result = [];
-        let i = beacon.x - beacon.distance + 1;
+        let  i = beacon.x - beacon.distance + 1;
         let stop = (beacon.distance * 2) - 1;
         for (let xCounter = 0; xCounter < stop; xCounter++) {
             let j = beacon.y - beacon.distance + 1;
             let row = plan[i];
             if (row !== undefined) {
                 for (let yCounter = 0; yCounter < stop; yCounter++) {
-                    row[j] === 1 && row[j] !== undefined ? result.push([i, j]) : null;
+                    row[j] !== 0 && row[j] !== undefined ? result.push([i, j]) : null;
                     j++
                 }
             }
@@ -34,6 +33,15 @@ export const PriorityAreaCalculator = (Props) => {
         let priority2 = [];
         beaconsOnPriority.forEach((beacon) => {
             beacon.distance < 5 ? priority1.push(calculateArea(beacon)) : priority2.push(calculateArea(beacon))
+        });
+        // if(priority1.length > 1){
+        //     priority1.map((area) => {
+        //         priority2.push(area);
+        //     });
+        //     priority1 = [];
+        // }
+        priority1.sort((a,b) => {
+            return a.distance - b.distance
         });
         console.log({
             priority1: priority1,
